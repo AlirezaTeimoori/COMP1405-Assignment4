@@ -19,11 +19,11 @@ def readStats(filename): # Read a CSV file and returns a 2D list of the data
 
     try:
         with open(filename, "r") as file: # Create file with the input name to read
-            reader = csv.reader(file) # Create a variable as CSV reader
+            string = file.read().split("\n")
             output = [] # Create an empty list
-            for row in reader: # for each row in the data
-                output.append(row) # append that row as a list to our empty list
-        output.remove(output[0]) # Remove the header row
+            for row in string:
+                output.append(row.split(","))
+        output.remove(output[0]); output.remove(output[-1]) # Remove the header row and last row which is empty
     except:
         print("Problem! The file does not exist!")
         return
@@ -63,7 +63,48 @@ def filterByPos(all, pos: str):
     
     return output
 
-def sortByPoints():
+def sortByPoints(all):
 
+    output = [x[:] for x in all]
+
+    for element_index in range(len(output)):
+
+        min_index = element_index
+
+        for next_element in range(element_index+1, len(output)):
+
+            if int(output[min_index][6]) > int(output[next_element][6]):
+                min_index = next_element
+
+        output[element_index], output[min_index] = output[min_index], output[element_index]
+
+    file = open("test.csv", "w+")
+    out = ""
+    for i in output:
+        for j in i:
+            out += f"{j},"
+        out += "\n"
+    file.write(str(out))
+    file.close()
+    return output
     
-print(*filterByPos(readStats("nhl_2018.csv"), "LP"), sep = "\n")
+def buildBestTeam(all):
+
+    lst = sortByPoints(all)
+    bestTeam = []
+    positions = ["D", "D", "LW", "RW", "C"]
+    for player in reversed(lst):
+        if player[2] in positions:
+            bestTeam.append(player[0])
+            positions.pop(positions.index(player[2]))
+
+    output = ""
+    for i in bestTeam: output += f"{i}\n"
+    try:
+        with open("best.txt", "w+") as file:
+            file.write(output)
+    except:
+        print("ERROR!")
+
+print(*sortByPoints(readStats("nhl_2018.csv")), sep = "\n")
+print(buildBestTeam(readStats("nhl_2018.csv")))
