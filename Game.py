@@ -37,15 +37,13 @@ def statsForPlayer(all, name): # Binary Search in the data to find player and re
     while start <= end: # While in correct range
 
         middle   = (start + end) // 2 # find middle index
-        midname  = all[middle][0]; print(midname)
+        midname  = all[middle][0]
         midfirst = all[middle][0].split()[0]
         midlast  = all[middle][0].split()[1]
         if midlast > last:
             end = middle - 1
-            print(midname, last)
         elif midlast < last:
             start = middle + 1
-            print(midname, last)
         elif midfirst > first:
             end = middle - 1
         elif midfirst < first:
@@ -88,7 +86,7 @@ def sortByPoints(all):
     file.close()
     return output
     
-def buildBestTeam(all):
+def buildBestTeam(all,name:str):
 
     lst = sortByPoints(all)
     bestTeam = []
@@ -101,10 +99,56 @@ def buildBestTeam(all):
     output = ""
     for i in bestTeam: output += f"{i}\n"
     try:
-        with open("best.txt", "w+") as file:
+        with open(name, "w+") as file:
             file.write(output)
     except:
-        print("ERROR!")
+        print("ERROR WRITING THE FILE!")
 
-print(*sortByPoints(readStats("nhl_2018.csv")), sep = "\n")
-print(buildBestTeam(readStats("nhl_2018.csv")))
+def nameToList(fileName: str): # Function converts a file of names to a list
+
+    output = [] # create output list
+    with open(fileName, "r") as file: # make the file ready to read
+        line = file.readline() # create a line reader
+        while line: output.append(line.strip()); line = file.readline() # while there is line append each line to the output list
+
+    return output
+
+def nameToStats(all: list, fileName: str):
+
+    output = nameToList(fileName)
+    output = [statsForPlayer(all, name) for name in output]
+
+    return output
+
+def displayTeamStats(all: list, teamFile: str):
+
+    team = nameToStats(all, teamFile)
+
+    all = readStats("nhl_2018.csv")
+    for player in team: player[0] += "\t" if (len(player[0]) >= 16 and len(player[0]) != 24) else "" if len(player[0]) >= 24 else "\t\t"
+    
+    output  = "\nPlayer Name\t\t\tTeam\tPos\tGames\tG\tA\tPts\tPIM\tSOG\tHits\tBS\n"
+    output += "".join(["========" for i in range(14)]); output += "\n"
+    output += '\n'.join('\t'.join(row) for row in team)
+
+    return output
+
+def pointsPerTeam(all: list, teamFile: str):
+
+    try:
+        team = nameToStats(all, teamFile)
+    except:
+        return 0
+
+    output = 0
+
+    for player in team:
+        try:
+            output += int(player[6])
+        except:
+            output += 0
+
+    #print(displayTeamStats(all, teamFile))
+    return output
+
+print(pointsPerTeam(readStats("nhl_2018.csv"), "best_def.txt"))
