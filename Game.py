@@ -113,7 +113,7 @@ def pointsPerTeam(all: list, teamFile: str): # Calculate the points of the team
         except: output += 0 # if there was an error consider that player as a 0
     return output
 
-def test(): # The test function that tests other functions
+def testing(): # The test function that tests other functions
 
     # Ensuring that the number of players read from the provided .csv file by your
     #   readStats() function matches the number you can count by opening it in, for example, Microsoft Excel.
@@ -147,4 +147,4 @@ def test(): # The test function that tests other functions
     output += "\n\n\nAll of the functions are tested and are perfectly working :) Thanks for your time :)\n\n"
     return output
 
-print(test()) # Run the testing function
+print(testing()) # Run the testing function
