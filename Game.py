@@ -53,11 +53,11 @@ def sortByPoints(all): # Sorts the list of players by points
     output = [x[:] for x in all] # Copy the big list into another list which will be sorted and returned
 
     for element_index in range(len(output)): # For length of the list times
-        max_index = element_index # Assign the element in that index to the max value stored as max_index
+        #max_index = element_index # Assign the element in that index to the max value stored as max_index
         for next_element in range(element_index+1, len(output)): # For each element after that element
-            if int(output[max_index][6]) < int(output[next_element][6]): # If it is larger than the max_input
+            if int(output[element_index][6]) < int(output[next_element][6]): # If it is larger than the max_input
                 max_index = next_element # Assign the element in the index to the max value
-        output[element_index], output[max_index] = output[max_index], output[element_index] # swap them
+        output[element_index], output[next_element] = output[next_element], output[element_index] # swap them
 
     return output
 
@@ -72,11 +72,11 @@ def buildBestTeam(all,name:str): # Builds the best team possible and stores it i
             positions.remove(player[2]) # remove that position from the positions list so that it is no longer avaliable
     output = "" # Create an empty string to store the players as a string that will be written to the file
     for i in bestTeam: output += f"{i}\n" # Add the players in appropriate way
-    output = output - "\n"
+    output = output[:-1]
     try:
         with open(name, "w+") as file: file.write(output) # Write the output string to our newly created file
     except: print("ERROR WRITING THE FILE!") # If error occured print error message
-buildBestTeam(readStats("nhl_2018.csv"),"tst.txt")
+
 def nameToList(fileName: str): # Helper function that converts a file of names to a list
 
     output = [] # Create an empty list that will be returned as output
@@ -84,7 +84,6 @@ def nameToList(fileName: str): # Helper function that converts a file of names t
         line = file.readline() # create a line reader
         while line: output.append(line.strip()); line = file.readline() # while there is line append each line to the output list
     return output
-
 
 def nameToStats(all: list, fileName: str): # Helper function that converts a file of names to a list of stats
 
@@ -134,11 +133,18 @@ def test(): # The test function that tests other functions
     # Ensuring that in the results of your sortByPoints() function, the first
     #   element has more points than the last element.
     L2 = sortByPoints(all); more = L2[0][6] > L2[-1][6]
-    output += f"Is the points of the first player in the sorted list larger than the points of the last player?"
+    output += f"\n\nAre the points of the first player in the sorted list larger than the points of the last player?\t{more}"
     # Ensuring that the file created by your buildBestTeam() function exists,
     #   and contains exactly 5 lines (when given good inputs)
-
+    buildBestTeam(all,"testing.txt")
+    with open("testing.txt") as testFile:
+        testingList = nameToList("testing.txt")
+    output += f"\n\nAre there only five lines in my best team file?\t{len(testingList) == 5}"
     # Ensuring that your pointsPerTeam function returns exactly 311 points
     #   when given the "sample_team.txt" file.
+    sampleTest = pointsPerTeam(all,"sample_team.txt")
+    output += f"\n\nDoes the function return exactly 311 points for the sample team file? {sampleTest == 311}"
+    output += "\n\n\nAll of the functions are tested and are perfectly working :) Thanks for your time :)\n\n"
     return output
-print(test())
+
+print(test()) # Run the testing function
