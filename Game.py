@@ -13,142 +13,132 @@
 ---------------------------------------
 '''
 
-import csv # Importing required libraries
-
 def readStats(filename): # Read a CSV file and returns a 2D list of the data
-
+    
     try:
         with open(filename, "r") as file: # Create file with the input name to read
-            string = file.read().split("\n")
+            strings = file.read().split("\n") # Store all the data as a list split by "\n"
             output = [] # Create an empty list
-            for row in string:
-                output.append(row.split(","))
+            for row in strings: # For each row in the data
+                output.append(row.split(",")) # Break the row into a list of strings and append it to our output list
         output.remove(output[0]); output.remove(output[-1]) # Remove the header row and last row which is empty
-    except:
-        print("Problem! The file does not exist!")
-        return
-    return output
+    except: # If reached an error
+        print("Problem! The file does not exist!") # Print the error
+        return [] # Stop the function and return an empty list
+    return output # return the 2D list
 
-def statsForPlayer(all, name): # Binary Search in the data to find player and return related data
-
-    start = 0; end = len(all)-1 # Start and end points
-    fullname = name.split(); first = fullname[0]; last  = fullname[1] # Split name
-
-    while start <= end: # While in correct range
-
-        middle   = (start + end) // 2 # find middle index
-        midname  = all[middle][0]
-        midfirst = all[middle][0].split()[0]
-        midlast  = all[middle][0].split()[1]
-        if midlast > last:
-            end = middle - 1
-        elif midlast < last:
-            start = middle + 1
-        elif midfirst > first:
-            end = middle - 1
-        elif midfirst < first:
-            start = middle + 1
-        else: return all[middle]
-
-    print("Player not in list!")
-
-def filterByPos(all, pos: str):
-
-    output = []
-    for row in all:
-        if row[2] == pos:
-            output.append(row)
+def statsForPlayer(all, name): # Searches for the player in the 2D list and return the Stats for the player
     
+    start, end = 0, len(all); middle = (start+end)//2 # Define Start, End, and Mid points
+    firstName, lastName = name.split()[0], name.split()[1] # Split name to first and last name
+    midFirst, midLast  = all[middle][0].split()[0], all[middle][0].split()[1] # Split the name at the middle of the list
+
+    if   midLast > lastName: return statsForPlayer(all[:middle], name) # if key last name is smaller than middle last name search the left side
+    elif midLast < lastName: return statsForPlayer(all[middle:], name) # if key last name is larger than middle last name search the right side
+    elif midFirst > firstName: return statsForPlayer(all[:middle], name) # if key first name is smaller than middle one, search the left side
+    elif midFirst < firstName: return statsForPlayer(all[middle:], name) # if key firstname is larger than middle one, search the right side
+    elif all[middle][0] == name: return all[middle] # other than that, return the element in the middle index
+    else: return "NOT IN PLAYERS" # return error message if the player is not found
+
+def filterByPos(all, pos: str): # Filters the 2D list by he position recieved from the user
+
+    output = [] # Create empty output list
+    for row in all: # For each row in the big list
+        if row[2] == pos: # If the player has the position
+            output.append(row) # Append the player to our output list
     return output
 
-def sortByPoints(all):
+def sortByPoints(all): # Sorts the list of players by points
 
-    output = [x[:] for x in all]
+    output = [x[:] for x in all] # Copy the big list into another list which will be sorted and returned
 
-    for element_index in range(len(output)):
+    for element_index in range(len(output)): # For length of the list times
+        max_index = element_index # Assign the element in that index to the max value stored as max_index
+        for next_element in range(element_index+1, len(output)): # For each element after that element
+            if int(output[max_index][6]) < int(output[next_element][6]): # If it is larger than the max_input
+                max_index = next_element # Assign the element in the index to the max value
+        output[element_index], output[max_index] = output[max_index], output[element_index] # swap them
 
-        min_index = element_index
-
-        for next_element in range(element_index+1, len(output)):
-
-            if int(output[min_index][6]) > int(output[next_element][6]):
-                min_index = next_element
-
-        output[element_index], output[min_index] = output[min_index], output[element_index]
-
-    file = open("test.csv", "w+")
-    out = ""
-    for i in output:
-        for j in i:
-            out += f"{j},"
-        out += "\n"
-    file.write(str(out))
-    file.close()
     return output
-    
-def buildBestTeam(all,name:str):
 
-    lst = sortByPoints(all)
-    bestTeam = []
-    positions = ["D", "D", "LW", "RW", "C"]
-    for player in reversed(lst):
-        if player[2] in positions:
-            bestTeam.append(player[0])
-            positions.pop(positions.index(player[2]))
+def buildBestTeam(all,name:str): # Builds the best team possible and stores it in a newly written file
 
-    output = ""
-    for i in bestTeam: output += f"{i}\n"
+    lst = sortByPoints(all) # Sort the given list using our sorting function and store it in lst
+    bestTeam = [] # Create an empty list for adding the players
+    positions = ["D", "D", "LW", "RW", "C"] # Create a list of available position
+    for player in lst: # For each player in our sorted list
+        if player[2] in positions: # If the player has the required position
+            bestTeam.append(player[0]) # append the player to our team list
+            positions.remove(player[2]) # remove that position from the positions list so that it is no longer avaliable
+    output = "" # Create an empty string to store the players as a string that will be written to the file
+    for i in bestTeam: output += f"{i}\n" # Add the players in appropriate way
+    output = output - "\n"
     try:
-        with open(name, "w+") as file:
-            file.write(output)
-    except:
-        print("ERROR WRITING THE FILE!")
+        with open(name, "w+") as file: file.write(output) # Write the output string to our newly created file
+    except: print("ERROR WRITING THE FILE!") # If error occured print error message
+buildBestTeam(readStats("nhl_2018.csv"),"tst.txt")
+def nameToList(fileName: str): # Helper function that converts a file of names to a list
 
-def nameToList(fileName: str): # Function converts a file of names to a list
-
-    output = [] # create output list
+    output = [] # Create an empty list that will be returned as output
     with open(fileName, "r") as file: # make the file ready to read
         line = file.readline() # create a line reader
         while line: output.append(line.strip()); line = file.readline() # while there is line append each line to the output list
-
     return output
 
-def nameToStats(all: list, fileName: str):
 
-    output = nameToList(fileName)
-    output = [statsForPlayer(all, name) for name in output]
+def nameToStats(all: list, fileName: str): # Helper function that converts a file of names to a list of stats
 
+    output = nameToList(fileName) # convert the file of names to a list of names
+    output = [statsForPlayer(all, name) for name in output] # for each element in the list of names append the stats to the list
     return output
 
-def displayTeamStats(all: list, teamFile: str):
+def displayTeamStats(all: list, teamFile: str): # Display the stats of a team file
 
-    team = nameToStats(all, teamFile)
+    team = nameToStats(all, teamFile) # convert the file of names to a list of stats using helper functions
 
-    all = readStats("nhl_2018.csv")
+    # For each player in team add certain amount of tabs based on the length of the name
     for player in team: player[0] += "\t" if (len(player[0]) >= 16 and len(player[0]) != 24) else "" if len(player[0]) >= 24 else "\t\t"
-    
-    output  = "\nPlayer Name\t\t\tTeam\tPos\tGames\tG\tA\tPts\tPIM\tSOG\tHits\tBS\n"
-    output += "".join(["========" for i in range(14)]); output += "\n"
-    output += '\n'.join('\t'.join(row) for row in team)
 
+    output  = "\nPlayer Name\t\t\tTeam\tPos\tGames\tG\tA\tPts\tPIM\tSOG\tHits\tBS\n" # Add the header of the table
+    output += "".join(["========" for i in range(14)]); output += "\n" # Create a devider under the header
+    output += '\n'.join('\t'.join(row) for row in team) # for each row in the team create the table using \t and \n
     return output
 
-def pointsPerTeam(all: list, teamFile: str):
+def pointsPerTeam(all: list, teamFile: str): # Calculate the points of the team
 
-    try:
-        team = nameToStats(all, teamFile)
-    except:
-        return 0
-
-    output = 0
-
-    for player in team:
-        try:
-            output += int(player[6])
-        except:
-            output += 0
-
-    #print(displayTeamStats(all, teamFile))
+    try: team = nameToStats(all, teamFile) # store the teams stats into a variable
+    except: return 0 # if there was an error return 0
+    output = 0 # Start with 0 for the points
+    for player in team: # for each player in the team
+        try: output += int(player[6]) # add players points to the output variable
+        except: output += 0 # if there was an error consider that player as a 0
     return output
 
-print(pointsPerTeam(readStats("nhl_2018.csv"), "best_def.txt"))
+def test(): # The test function that tests other functions
+
+    # Ensuring that the number of players read from the provided .csv file by your
+    #   readStats() function matches the number you can count by opening it in, for example, Microsoft Excel.
+    all = readStats("nhl_2018.csv")
+    output = f"\n\nare there 907 full rows in the file?\t{len(all) == 906}"
+    output += f"\ndo we have 906 players in the file?\t{len(all)-1 == 905}"
+    # Ensuring that your readStats() function returns an empty list if given a non-existent filename.
+    output += f"\n\nIf the file name is non existant, the function returns:\t{readStats('empty.txt')}"
+    # Ensuring that you can search for a specific player by name (ie, pick one from
+    #   the list manually and search for them) using your statsForPlayer() function, 
+    #   and that the returned list contains that player's name and team
+    output += f'\n\nWhen searching for name "Joey Anderson" using our stats function, it returns:\n{statsForPlayer(all, "Joey Anderson")}'
+    # Ensuring that when your filterByPos() function is used for the position "D",
+    #   that no other positions are in the returned list.
+    L1 = filterByPos(all, "D"); L1 = [element[2] for element in L1]
+    output += f"\n\nThe list of position of the filtered list is printed below (there is no position but D):\n{L1}"
+    # Ensuring that in the results of your sortByPoints() function, the first
+    #   element has more points than the last element.
+    L2 = sortByPoints(all); more = L2[0][6] > L2[-1][6]
+    output += f"Is the points of the first player in the sorted list larger than the points of the last player?"
+    # Ensuring that the file created by your buildBestTeam() function exists,
+    #   and contains exactly 5 lines (when given good inputs)
+
+    # Ensuring that your pointsPerTeam function returns exactly 311 points
+    #   when given the "sample_team.txt" file.
+    return output
+print(test())
